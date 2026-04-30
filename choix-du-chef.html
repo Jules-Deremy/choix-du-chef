@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choix du chef</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #F7F3EE;
+    --surface:  #FFFFFF;
+    --border:   #E2D9CF;
+    --text:     #1C1612;
+    --muted:    #8C7D72;
+    --done-bg:  #E8EDE8;
+    --done-txt: #3D5C3A;
+    --todo-bg:  #EDE8E2;
+    --todo-txt: #5C4D3A;
+    --shadow:   0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
+    --shadow-hover: 0 2px 6px rgba(0,0,0,0.08), 0 8px 28px rgba(0,0,0,0.09);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    padding: 3.5rem 2rem 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: baseline;
+    gap: 1.2rem;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.6rem;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 300;
+  }
+
+  .controls {
+    max-width: 1100px;
+    margin: 2rem auto 0;
+    padding: 0 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.4rem;
+    align-items: center;
+  }
+
+  .pill {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 99px;
+    padding: 5px 14px;
+    font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .pill:hover { border-color: #C0B0A0; color: var(--text); }
+  .pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+  .counter {
+    max-width: 1100px;
+    margin: 1rem auto 0;
+    padding: 0 2rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.85rem;
+    padding: 1.2rem 2rem 5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 1.25rem 1.3rem;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s;
+    box-shadow: var(--shadow);
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .card.done { background: #FAFAF8; }
+  .card.done .card-title { text-decoration: line-through; color: var(--muted); }
+
+  .cat-stripe { width: 28px; height: 3px; border-radius: 99px; margin-bottom: 1rem; }
+
+  .card-title {
+    font-size: 0.98rem;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 0.25rem;
+  }
+  .card-cat {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .card-footer {
+    margin-top: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .badge {
+    font-size: 0.68rem;
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .badge-todo { background: var(--todo-bg); color: var(--todo-txt); }
+  .badge-done { background: var(--done-bg); color: var(--done-txt); }
+  .card-who { font-size: 0.68rem; color: var(--muted); font-weight: 300; }
+  .card-note {
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 0.6rem;
+  }
+  .card-score { font-size: 0.72rem; font-weight: 500; color: var(--muted); margin-top: 0.3rem; }
+
+  .add-btn {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    width: 52px; height: 52px;
+    background: var(--text);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    transition: transform 0.18s, background 0.18s;
+    z-index: 100;
+  }
+  .add-btn:hover { transform: scale(1.07); background: #3D3530; }
+
+  /* loading spinner on button */
+  .add-btn.loading { pointer-events: none; opacity: 0.6; }
+
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(20,15,10,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    backdrop-filter: blur(2px);
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 430px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .modal h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 1.4rem;
+  }
+  .close-modal {
+    position: absolute;
+    top: 1.1rem; right: 1.3rem;
+    background: none; border: none;
+    font-size: 1.1rem;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .form-group { margin-bottom: 0.9rem; }
+  .form-group label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 5px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    font-weight: 300;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: #A09080; }
+  .form-group textarea { resize: vertical; min-height: 65px; }
+
+  .form-row { display: flex; gap: 0.7rem; }
+  .form-row .form-group { flex: 1; }
+
+  .modal-actions { display: flex; gap: 0.6rem; margin-top: 1.3rem; }
+  .btn-save {
+    flex: 1;
+    background: var(--text);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save:hover { background: #3D3530; }
+  .btn-save:disabled { opacity: 0.5; cursor: default; }
+  .btn-cancel {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  .btn-delete {
+    background: transparent;
+    color: #B04040;
+    border: 1px solid #DFC5C5;
+    border-radius: 8px;
+    padding: 9px 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 5rem 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    font-size: 0.9rem;
+    grid-column: 1/-1;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 2rem; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 400;
+    transition: transform 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    header { flex-direction: column; gap: 0.3rem; padding: 2.5rem 1.2rem 0; }
+    .controls, .counter { padding: 0 1.2rem; }
+    .grid { padding: 1rem 1.2rem 5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Choix du chef</h1>
+  <p>Films, activités, animes et tutti quanti</p>
+</header>
+
+<div class="controls" id="catFilters"></div>
+<div class="controls" style="margin-top:0.5rem" id="statusFilters">
+  <button class="pill active" onclick="setStatus('all',this)">Tout</button>
+  <button class="pill" onclick="setStatus('todo',this)">À faire</button>
+  <button class="pill" onclick="setStatus('done',this)">Déjà fait</button>
+</div>
+
+<p class="counter" id="counter"></p>
+<div class="grid" id="grid"><p class="empty" style="grid-column:1/-1">Chargement...</p></div>
+
+<button class="add-btn" id="addBtn" onclick="openAdd()">+</button>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close-modal" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle">Ajouter</h2>
+    <div class="form-group">
+      <label>Titre</label>
+      <input type="text" id="f-title" placeholder="Ex: Star Wars (jvais pas lâcher)">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Catégorie</label>
+        <select id="f-cat"></select>
+      </div>
+      <div class="form-group">
+        <label>Ajouté par</label>
+        <input type="text" id="f-who">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Statut</label>
+        <select id="f-status">
+          <option value="todo">À faire</option>
+          <option value="done">Fait</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Note /10</label>
+        <input type="number" id="f-score" min="0" max="10" placeholder="—">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Commentaire</label>
+      <textarea id="f-note"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-delete" id="btnDelete" style="display:none" onclick="deleteItem()">Supprimer</button>
+      <button class="btn-save" id="btnSave" onclick="saveItem()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://zwrkofhfgpsgjheznypu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cmtvZmhmZ3BzZ2poZXpueXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTMxMjEsImV4cCI6MjA5MzEyOTEyMX0.IL-EUSK8Fxo2roep1GCIjWoDCq5TDsMvTk0Ai618PSQ';
+const API = `${SUPABASE_URL}/rest/v1/items`;
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+};
+
+const CATS = [
+  { id:'film',     label:'Film',      color:'#C4956A' },
+  { id:'serie',    label:'Série',     color:'#9B7EB8' },
+  { id:'anime',    label:'Anime',     color:'#5BADB0' },
+  { id:'manga',    label:'Manga',     color:'#D4845A' },
+  { id:'musique',  label:'Musique',   color:'#6A9BD4' },
+  { id:'jeu',      label:'Jeu vidéo', color:'#6AAD7A' },
+  { id:'restau',   label:'Restau',    color:'#D4A843' },
+  { id:'activite', label:'Activité',  color:'#C45A72' },
+  { id:'autre',    label:'Autre',     color:'#8B7D6B' },
+];
+
+let items = [];
+let activeCat = 'all';
+let activeStatus = 'all';
+let editingId = null;
+
+function catById(id) { return CATS.find(c=>c.id===id) || { label: id, color: '#8B7D6B' }; }
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+async function loadItems() {
+  try {
+    const res = await fetch(`${API}?order=created_at.desc`, { headers: HEADERS });
+    if (!res.ok) throw new Error();
+    items = await res.json();
+    render();
+  } catch {
+    document.getElementById('grid').innerHTML =
+      '<p class="empty" style="grid-column:1/-1;color:#B04040">Erreur de connexion. Vérifie la config Supabase.</p>';
+  }
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  let f = items;
+  if (activeCat !== 'all') f = f.filter(i=>i.cat===activeCat);
+  if (activeStatus !== 'all') f = f.filter(i=>i.status===activeStatus);
+
+  const doneCount = f.filter(i=>i.status==='done').length;
+  document.getElementById('counter').textContent =
+    f.length === 0 ? '' : `${f.length} item${f.length>1?'s':''} · ${doneCount} fait${doneCount>1?'s':''}`;
+
+  if (f.length === 0) {
+    grid.innerHTML = '<p class="empty">Rien ici pour l\'instant.</p>';
+    return;
+  }
+
+  grid.innerHTML = f.map(item => {
+    const cat = catById(item.cat);
+    return `<div class="card ${item.status==='done'?'done':''}" onclick="openEdit('${item.id}')">
+      <div class="cat-stripe" style="background:${cat.color}"></div>
+      <p class="card-title">${item.title}</p>
+      <p class="card-cat">${cat.label}</p>
+      ${item.score != null ? `<p class="card-score">${item.score} / 10</p>` : ''}
+      ${item.note ? `<p class="card-note">${item.note}</p>` : ''}
+      <div class="card-footer">
+        <span class="badge ${item.status==='done'?'badge-done':'badge-todo'}">${item.status==='done'?'Fait':'À faire'}</span>
+        <span class="card-who">${item.who||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildFilters() {
+  document.getElementById('catFilters').innerHTML =
+    `<button class="pill active" onclick="setCat('all',this)">Tout</button>` +
+    CATS.map(c=>`<button class="pill" onclick="setCat('${c.id}',this)">${c.label}</button>`).join('');
+  document.getElementById('f-cat').innerHTML =
+    CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+}
+
+function setCat(id, btn) {
+  activeCat = id;
+  document.querySelectorAll('#catFilters .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function setStatus(s, btn) {
+  activeStatus = s;
+  document.querySelectorAll('#statusFilters .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function openAdd() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Ajouter';
+  ['f-title','f-who','f-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-cat').value = 'film';
+  document.getElementById('f-status').value = 'todo';
+  document.getElementById('f-score').value = '';
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('btnSave').textContent = 'Enregistrer';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-title').focus(), 50);
+}
+
+function openEdit(id) {
+  const item = items.find(i=>i.id===id);
+  if (!item) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Modifier';
+  document.getElementById('f-title').value  = item.title;
+  document.getElementById('f-cat').value    = item.cat;
+  document.getElementById('f-who').value    = item.who||'';
+  document.getElementById('f-status').value = item.status;
+  document.getElementById('f-score').value  = item.score != null ? item.score : '';
+  document.getElementById('f-note').value   = item.note||'';
+  document.getElementById('btnDelete').style.display = 'inline-block';
+  document.getElementById('btnSave').textContent = 'Enregistrer';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+
+async function saveItem() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+  const scoreVal = document.getElementById('f-score').value;
+  const data = {
+    title,
+    cat:    document.getElementById('f-cat').value,
+    who:    document.getElementById('f-who').value.trim() || null,
+    status: document.getElementById('f-status').value,
+    score:  scoreVal !== '' ? Number(scoreVal) : null,
+    note:   document.getElementById('f-note').value.trim() || null,
+  };
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    if (editingId) {
+      const res = await fetch(`${API}?id=eq.${editingId}`, {
+        method: 'PATCH',
+        headers: { ...HEADERS, 'Prefer': 'return=representation' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error();
+      const [updated] = await res.json();
+      items = items.map(i => i.id === editingId ? updated : i);
+      toast('Modifié');
+    } else {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { ...HEADERS, 'Prefer': 'return=representation' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error();
+      const [created] = await res.json();
+      items.unshift(created);
+      toast('Ajouté');
+    }
+    closeModal();
+    render();
+  } catch {
+    toast('Erreur, réessaie');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enregistrer';
+  }
+}
+
+async function deleteItem() {
+  if (!editingId || !confirm('Supprimer cet item ?')) return;
+  try {
+    const res = await fetch(`${API}?id=eq.${editingId}`, { method: 'DELETE', headers: HEADERS });
+    if (!res.ok) throw new Error();
+    items = items.filter(i=>i.id!==editingId);
+    closeModal();
+    render();
+    toast('Supprimé');
+  } catch {
+    toast('Erreur lors de la suppression');
+  }
+}
+
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeModal();
+});
+
+buildFilters();
+loadItems();
+</script>
+</body>
+</html>
